@@ -62,10 +62,21 @@ export const Navbar = () => {
             <a href="#impact" className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 rounded-lg hover:bg-slate-50 transition-colors">
               Campus Impact
             </a>
-            <Link to="/analytics" className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5">
+            <button 
+              type="button"
+              onClick={() => {
+                if (isAuthenticated) {
+                  navigate('/analytics');
+                } else {
+                  handleQuickSwitch('student');
+                  navigate('/analytics');
+                }
+              }}
+              className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
               <BarChart3 className="w-4 h-4 text-slate-400" />
               Live Analytics
-            </Link>
+            </button>
           </div>
 
           {/* Auth / Quick Actions */}
@@ -173,13 +184,21 @@ export const Navbar = () => {
           >
             Home
           </Link>
-          <Link
-            to="/analytics"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              if (isAuthenticated) {
+                navigate('/analytics');
+              } else {
+                handleQuickSwitch('student');
+                navigate('/analytics');
+              }
+            }}
+            className="w-full text-left block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer"
           >
             Live Analytics
-          </Link>
+          </button>
           {isAuthenticated ? (
             <>
               <Link

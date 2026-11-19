@@ -10,8 +10,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
-    # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./campusfix.db")
+    # Database (uses absolute path for consistency regardless of current working directory)
+    _default_db = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "campusfix.db").replace("\\", "/")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{_default_db}")
     
     # AI Integration
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", None)

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
+import { NotificationsDropdown } from './NotificationsDropdown';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, Bell, PlusCircle, Search, Shield, User } from 'lucide-react';
+import { Menu, X, PlusCircle, Search, Shield, User } from 'lucide-react';
 
 export const DashboardLayout = () => {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -92,6 +93,8 @@ export const DashboardLayout = () => {
                 <span>Report Issue</span>
               </Link>
             )}
+
+            <NotificationsDropdown />
 
             <div className="h-5 w-px bg-slate-200"></div>
 

@@ -23,7 +23,8 @@ VALID_PRIORITIES = ["Low", "Medium", "High", "Urgent"]
 KEYWORD_CATEGORY_MAP = {
     "Internet/Wi-Fi": [
         "wifi", "wi-fi", "internet", "router", "lan", "ethernet", "bandwidth", "disconnect", 
-        "offline", "connection", "network", "signal", "ping", "dns", "portal", "speed", "hotspot"
+        "offline", "connection", "network", "signal", "ping", "dns", "portal", "speed", "hotspot",
+        "access point", "ap", "packet", "packets", "latency", "connectivity"
     ],
     "Electricity": [
         "electricity", "power", "light", "lights", "fan", "bulb", "tube", "tubelight", "switch", 
@@ -63,13 +64,13 @@ KEYWORD_CATEGORY_MAP = {
 }
 
 URGENT_KEYWORDS = [
-    "spark", "fire", "smoke", "flood", "broken lock", "stolen", "theft", "insect", "worm", 
+    "spark", "fire", "smoke", "flood", "burst", "broken lock", "stolen", "theft", "insect", "worm", 
     "medical", "injury", "electric shock", "short circuit", "severe leak", "emergency", "gas leak", "hazard"
 ]
 
 HIGH_KEYWORDS = [
     "blackout", "no water", "exam tomorrow", "no wifi", "submission", "exam", "both lifts", 
-    "overflow", "sewage", "dead", "power cut", "urgent", "broken", "offline"
+    "overflow", "sewage", "dead", "power cut", "urgent", "broken", "offline", "flapping"
 ]
 
 LOW_KEYWORDS = [
@@ -183,7 +184,7 @@ JSON format required:
                         matched_keywords.append(kw)
 
         # Contextual boosts
-        if "wifi" in text or "wi-fi" in text or "internet" in text:
+        if "wifi" in text or "wi-fi" in text or "internet" in text or "access point" in text or "router" in text:
             scores["Internet/Wi-Fi"] += 10
         if "spark" in text or "short circuit" in text or "electric" in text or "power" in text or "mcb" in text:
             scores["Electricity"] += 10
@@ -211,21 +212,21 @@ JSON format required:
         reasoning = "Standard issue requiring maintenance team review."
         
         for uk in URGENT_KEYWORDS:
-            if re.search(r'\b' + re.escape(uk) + r'\b', text):
+            if re.search(r'\b' + re.escape(uk), text):
                 priority = "Urgent"
                 reasoning = f"Urgent safety/health hazard detected matching '{uk}'."
                 break
                 
         if priority != "Urgent":
             for hk in HIGH_KEYWORDS:
-                if re.search(r'\b' + re.escape(hk) + r'\b', text):
+                if re.search(r'\b' + re.escape(hk), text):
                     priority = "High"
                     reasoning = f"High campus impact issue matching '{hk}'."
                     break
                     
         if priority == "Medium":
             for lk in LOW_KEYWORDS:
-                if re.search(r'\b' + re.escape(lk) + r'\b', text):
+                if re.search(r'\b' + re.escape(lk), text):
                     priority = "Low"
                     reasoning = f"Cosmetic or low-impact maintenance request matching '{lk}'."
                     break

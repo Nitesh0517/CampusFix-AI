@@ -108,12 +108,19 @@ export const LandingPage = () => {
                 <span>Get Started Free</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link
-                to={isAuthenticated ? (isAdmin ? '/admin' : '/dashboard') : '/dashboard'}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm border border-slate-200/90 shadow-2xs flex items-center justify-center gap-2 transition-all"
+              <button
+                type="button"
+                onClick={() => {
+                  if (isAuthenticated) {
+                    navigate(isAdmin ? '/admin' : '/dashboard');
+                  } else {
+                    handleDemoQuickAccess('student');
+                  }
+                }}
+                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm border border-slate-200/90 shadow-2xs flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <span>Explore Live Dashboard</span>
-              </Link>
+              </button>
             </div>
 
             {/* Quick Demo Switcher Strip for Reviewers */}

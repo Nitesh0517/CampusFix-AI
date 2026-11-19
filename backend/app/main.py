@@ -10,6 +10,7 @@ from app.api.auth import router as auth_router
 from app.api.complaints import router as complaints_router
 from app.api.ai import router as ai_router
 from app.api.analytics import router as analytics_router
+from app.api.notifications import router as notifications_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -47,6 +48,7 @@ app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(complaints_router, prefix=settings.API_V1_STR)
 app.include_router(ai_router, prefix=settings.API_V1_STR)
 app.include_router(analytics_router, prefix=settings.API_V1_STR)
+app.include_router(notifications_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():
