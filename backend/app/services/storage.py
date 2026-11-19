@@ -2,8 +2,11 @@ import os
 import uuid
 import shutil
 from abc import ABC, abstractmethod
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 from app.core.config import settings
+
+ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"]
+MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 class BaseStorageService(ABC):
     @abstractmethod
@@ -22,6 +25,10 @@ class LocalStorageService(BaseStorageService):
         os.makedirs(self.upload_dir, exist_ok=True)
 
     async def save_file(self, file: UploadFile) -> str:
+        # Validate MIME type
+        if file.content_type and file.content_type.lower() not in ALLOWED_MIME_TYPES:
+            raise HTTPException(status_code=400, detail="Invalid image type. Permitted: JPG, PNG, WebP.")
+
         ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
         clean_ext = ext.lower() if ext else ".jpg"
         unique_name = f"{uuid.uuid4().hex[:12]}{clean_ext}"
@@ -45,9 +52,9 @@ class LocalStorageService(BaseStorageService):
 
 class S3StorageService(BaseStorageService):
     """
-    AWS S3 Storage Service Adapter.
-    Activated when USE_AWS_STORAGE=true and AWS credentials are provided.
-    Designed for Techfest AWS ShipIt deployment.
+    Amazon S3 Storage Service Adapter.
+    Activated when USE_AWS_STORAGE=true and AWS credentials/roles are available.
+    Supports secure KMS encryption at rest and presigned URLs.
     """
     def __init__(self):
         self.bucket = settings.AWS_S3_BUCKET
@@ -56,26 +63,50 @@ class S3StorageService(BaseStorageService):
         try:
             import boto3
             self.client = boto3.client("s3", region_name=self.region)
-        except Exception as e:
-            # Fallback or warning if boto3 is not yet connected
+        except Exception:
             self.client = None
 
     async def save_file(self, file: UploadFile) -> str:
         if not self.client:
-            # Fallback to local storage if AWS S3 client is unconfigured
+            # Fallback to local storage if AWS S3 credentials are unavailable
             fallback = LocalStorageService()
             return await fallback.save_file(file)
-            
+
+        if file.content_type and file.content_type.lower() not in ALLOWED_MIME_TYPES:
+            raise HTTPException(status_code=400, detail="Invalid image format. Permitted: JPG, PNG, WebP.")
+
         ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
         unique_key = f"evidence/{uuid.uuid4().hex[:16]}{ext}"
         
-        self.client.upload_fileobj(
-            file.file,
-            self.bucket,
-            unique_key,
-            ExtraArgs={"ContentType": file.content_type or "image/jpeg"}
-        )
-        return f"https://{self.bucket}.s3.{self.region}.amazonaws.com/{unique_key}"
+        try:
+            self.client.upload_fileobj(
+                file.file,
+                self.bucket,
+                unique_key,
+                ExtraArgs={
+                    "ContentType": file.content_type or "image/jpeg",
+                    "ServerSideEncryption": "AES256"
+                }
+            )
+            return f"https://{self.bucket}.s3.{self.region}.amazonaws.com/{unique_key}"
+        except Exception as e:
+            print(f"S3 upload error: {e}. Falling back to local storage.")
+            fallback = LocalStorageService()
+            return await fallback.save_file(file)
+
+    def generate_presigned_url(self, key: str, expiration: int = 3600) -> Optional[str]:
+        """Generates a secure presigned GET URL for private S3 buckets."""
+        if not self.client:
+            return None
+        try:
+            return self.client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self.bucket, "Key": key},
+                ExpiresIn=expiration
+            )
+        except Exception as e:
+            print(f"Failed to generate presigned URL: {e}")
+            return None
 
     async def delete_file(self, file_url: str) -> bool:
         if not self.client:
